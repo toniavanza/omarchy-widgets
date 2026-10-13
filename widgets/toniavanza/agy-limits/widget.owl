@@ -10,9 +10,10 @@ widget "agy limits" {
   // Same numbers as /usage in agy. In print mode the slash command runs without a model
   // turn, with the account agy is signed into: no tokens spent.
   source u = cmd("""
-    command -v agy >/dev/null || { echo '{"error":"agy not installed"}'; exit 0; }
+    type agy >/dev/null 2>&1 || { echo '{"error":"agy not installed"}'; exit 0; }
     [ -s ~/.gemini/antigravity-cli/antigravity-oauth-token ] || { echo '{"error":"not logged in: open agy"}'; exit 0; }
-    cd ~ && agy --output-format json --print-timeout 25s --print /usage 2>/dev/null |
+    cmd=agy
+    cd ~ && $cmd --output-format json --print-timeout 25s --print /usage 2>/dev/null |
       jq -ce '{limits: [.command.data.groups[] | (.name | ascii_downcase | sub(" models$"; "") | sub(" and "; " & ")) as $g |
         .buckets | sort_by(.window != "5h") | .[] | {
           label: "\($g) · \(if .window == "5h" then "5h" elif .window == "weekly" then "week" else .window end)",
